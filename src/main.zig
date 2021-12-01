@@ -12,7 +12,7 @@ pub fn main() !void {
     try stdout.print("{s}\n", .{art});
 
     var args = try std.process.argsAlloc(alloc);
-    defer std.process.argsFree(alloc, args);
+    defer std.process.argsFree(alloc, args); // i know this is a no-op, but if i ever decide to change allocator this is necessary
 
     const num_opt: ?i32 = if (args.len <= 1) null else std.fmt.parseInt(i32, args[1], 0) catch null;
     const num = num_opt orelse 0;
