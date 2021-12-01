@@ -33,7 +33,6 @@ fn part1() !i32 {
 
 fn part2() !i32 {
     var window: [3]i32 = .{undefined} ** 3;
-    _ = window;
 
     var increments: i32 = 0;
 
