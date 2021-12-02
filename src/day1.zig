@@ -16,7 +16,8 @@ fn part1() !i32 {
     var lines = std.mem.tokenize(u8, input, "\n");
 
     while (lines.next()) |line| {
-        const parsed = try std.fmt.parseInt(i32, line, 0);
+        const trimmed = std.mem.trimRight(u8, line, "\r"); // just to be safe
+        const parsed = try std.fmt.parseInt(i32, trimmed, 0);
         defer last = parsed;
 
         if (last == null) {
@@ -38,13 +39,15 @@ fn part2() !i32 {
 
     var lines = std.mem.tokenize(u8, input, "\n");
     for (window) |_| {
-        const parsed = try std.fmt.parseInt(i32, lines.next().?, 0);
+        const trimmed = std.mem.trimRight(u8, lines.next().?, "\r");
+        const parsed = try std.fmt.parseInt(i32, trimmed, 0);
         advanceWindow(&window, parsed);
     }
     var last_sum: i32 = getSum(window);
 
     while (lines.next()) |line| {
-        const parsed = try std.fmt.parseInt(i32, line, 0);
+        const trimmed = std.mem.trimRight(u8, line, "\r");
+        const parsed = try std.fmt.parseInt(i32, trimmed, 0);
         advanceWindow(&window, parsed);
 
         const sum = getSum(window);
