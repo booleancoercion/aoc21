@@ -1,8 +1,15 @@
 const std = @import("std");
+const Allocator = std.mem.Allocator;
+const Writer = std.io.Writer;
+
 const art = @embedFile("../art.txt");
 
-const day1 = @import("day1.zig");
-const day2 = @import("day2.zig");
+const Days = struct {
+    pub const day1 = @import("day1.zig");
+    pub const day2 = @import("day2.zig");
+};
+
+const days: usize = std.meta.declarations(Days).len;
 
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -15,13 +22,23 @@ pub fn main() !void {
     var args = try std.process.argsAlloc(alloc);
     defer std.process.argsFree(alloc, args); // i know this is a no-op, but if i ever decide to change allocator this is necessary
 
-    const num_opt: ?i32 = if (args.len <= 1) null else std.fmt.parseInt(i32, args[1], 0) catch null;
-    const num = num_opt orelse 0;
+    const num_opt: ?usize = if (args.len <= 1) null else std.fmt.parseUnsigned(usize, args[1], 0) catch null;
+    const num = num_opt orelse days - 1;
 
-    try switch (num) {
-        1 => day1.run(stdout),
-        0, 2 => day2.run(alloc, stdout),
+    if (num < 1 or num > days) {
+        std.log.err("Invalid day number!\n", .{});
+    } else {
+        var buffer: [5]u8 = undefined;
+        const day = try std.fmt.bufPrint(&buffer, "day{}", .{num});
 
-        else => std.log.err("Invalid Day!\n", .{}),
-    };
+        inline for (std.meta.declarations(Days)) |decl| {
+            if (std.mem.eql(u8, day, decl.name)) {
+                const cmd = @field(Days, decl.name);
+                return cmd.run(alloc, stdout);
+            }
+        }
+
+        // if we're here, none of the days have been executed.
+        std.log.err("This day hasn't been solved yet!\n", .{});
+    }
 }
