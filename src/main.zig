@@ -2,6 +2,7 @@ const std = @import("std");
 const art = @embedFile("../art.txt");
 
 const day1 = @import("day1.zig");
+const day2 = @import("day2.zig");
 
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -18,7 +19,8 @@ pub fn main() !void {
     const num = num_opt orelse 0;
 
     try switch (num) {
-        0, 1 => day1.run(alloc, stdout),
+        1 => day1.run(stdout),
+        0, 2 => day2.run(alloc, stdout),
 
         else => std.log.err("Invalid Day!\n", .{}),
     };
