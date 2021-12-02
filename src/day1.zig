@@ -13,11 +13,10 @@ pub fn run(alloc: *Allocator, stdout: anytype) !void {
 fn part1() !i32 {
     var last: ?i32 = null;
     var increments: i32 = 0;
-    var lines = std.mem.tokenize(u8, input, "\n");
+    var lines = std.mem.tokenize(u8, input, "\r\n");
 
     while (lines.next()) |line| {
-        const trimmed = std.mem.trimRight(u8, line, "\r"); // just to be safe
-        const parsed = try std.fmt.parseInt(i32, trimmed, 0);
+        const parsed = try std.fmt.parseInt(i32, line, 0);
         defer last = parsed;
 
         if (last == null) {
@@ -37,17 +36,15 @@ fn part2() !i32 {
 
     var increments: i32 = 0;
 
-    var lines = std.mem.tokenize(u8, input, "\n");
+    var lines = std.mem.tokenize(u8, input, "\r\n");
     for (window) |_| {
-        const trimmed = std.mem.trimRight(u8, lines.next().?, "\r");
-        const parsed = try std.fmt.parseInt(i32, trimmed, 0);
+        const parsed = try std.fmt.parseInt(i32, lines.next().?, 0);
         advanceWindow(&window, parsed);
     }
     var last_sum: i32 = getSum(window);
 
     while (lines.next()) |line| {
-        const trimmed = std.mem.trimRight(u8, line, "\r");
-        const parsed = try std.fmt.parseInt(i32, trimmed, 0);
+        const parsed = try std.fmt.parseInt(i32, line, 0);
         advanceWindow(&window, parsed);
 
         const sum = getSum(window);
