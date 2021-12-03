@@ -7,6 +7,7 @@ const art = @embedFile("../art.txt");
 const Days = struct {
     pub const day1 = @import("day1.zig");
     pub const day2 = @import("day2.zig");
+    pub const day3 = @import("day3.zig");
 };
 
 const days: usize = std.meta.declarations(Days).len;
@@ -34,6 +35,8 @@ pub fn main() !void {
         inline for (std.meta.declarations(Days)) |decl| {
             if (std.mem.eql(u8, day, decl.name)) {
                 const cmd = @field(Days, decl.name);
+
+                try stdout.print("-- Day {} --\n", .{num});
                 return cmd.run(alloc, stdout);
             }
         }

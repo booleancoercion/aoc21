@@ -8,8 +8,6 @@ const Day2Err = error{InvalidInstruction};
 const input = @embedFile("../inputs/day2.txt");
 
 pub fn run(alloc: *Allocator, stdout: anytype) !void {
-    try stdout.print("-- Day 2 --\n", .{});
-
     const parsed: ArrayList(Inst) = try parseInput(alloc);
     defer parsed.deinit();
 
