@@ -2,6 +2,8 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 
 const input = @embedFile("../inputs/day5.txt");
+const i32_max: i32 = std.math.maxInt(i32);
+const i32_min: i32 = std.math.minInt(i32);
 
 const LineKind = enum { const_x, const_y, diagonal };
 const Line = struct {
@@ -33,44 +35,30 @@ const Line = struct {
     /// the amount of points that were upgraded to count 2.
     pub fn insertToBoard(self: *Self, board: *Board) ?i32 {
         var amount: i32 = 0;
+        var x = self.x[0];
+        var y = self.y[0];
 
         switch (self.kind) {
             .const_x => {
-                const x = self.x[0];
-
-                var y = @minimum(self.y[0], self.y[1]);
+                y = @minimum(y, self.y[1]);
                 while (y <= @maximum(self.y[0], self.y[1])) : (y += 1) {
-                    const count = board.insertPoint(.{ x, y }) orelse return null;
-                    if (count == 2) {
-                        amount += 1;
-                    }
+                    amount += Self.insertPoint(board, x, y) orelse return null;
                 }
             },
             .const_y => {
-                const y = self.y[0];
-
-                var x = @minimum(self.x[0], self.x[1]);
+                x = @minimum(x, self.x[1]);
                 while (x <= @maximum(self.x[0], self.x[1])) : (x += 1) {
-                    const count = board.insertPoint(.{ x, y }) orelse return null;
-                    if (count == 2) {
-                        amount += 1;
-                    }
+                    amount += Self.insertPoint(board, x, y) orelse return null;
                 }
             },
             .diagonal => {
-                const x_offset: i32 = if (self.x[0] < self.x[1]) 1 else -1;
-                const y_offset: i32 = if (self.y[0] < self.y[1]) 1 else -1;
-
-                var x = self.x[0];
-                var y = self.y[0];
+                const x_offset = Self.calcDelta(self.x);
+                const y_offset = Self.calcDelta(self.y);
 
                 var i: i32 = 0;
                 const len = std.math.absInt(self.x[1] - self.x[0]) catch unreachable;
                 while (i <= len) : (i += 1) {
-                    const count = board.insertPoint(.{ x, y }) orelse return null;
-                    if (count == 2) {
-                        amount += 1;
-                    }
+                    amount += Self.insertPoint(board, x, y) orelse return null;
 
                     x += x_offset;
                     y += y_offset;
@@ -79,6 +67,15 @@ const Line = struct {
         }
 
         return amount;
+    }
+
+    fn calcDelta(arr: [2]i32) i32 {
+        return if (arr[0] < arr[1]) 1 else -1;
+    }
+
+    fn insertPoint(board: *Board, x: i32, y: i32) ?i32 {
+        const count = board.insertPoint(.{ x, y }) orelse return null;
+        return if (count == 2) 1 else 0;
     }
 };
 
@@ -175,25 +172,19 @@ fn parseInput(alloc: *Allocator, lower_left: *[2]i32, top_right: *[2]i32) ![]Lin
     const line_num = std.mem.count(u8, input, "\n");
     var linelist = try alloc.alloc(Line, line_num);
 
-    var min_x: i32 = undefined;
-    var max_x: i32 = undefined;
-    var min_y: i32 = undefined;
-    var max_y: i32 = undefined;
+    var min_x = i32_max;
+    var max_x = i32_min;
+    var min_y = i32_max;
+    var max_y = i32_min;
 
     var lines_iter = std.mem.tokenize(u8, input, "\r\n");
-    for (linelist) |*line, i| {
+    for (linelist) |*line| {
         line.* = try parseLine(lines_iter.next().?);
-        if (i == 0) {
-            min_x = @minimum(line.x[0], line.x[1]);
-            max_x = @maximum(line.x[0], line.x[1]);
-            min_y = @minimum(line.y[0], line.y[1]);
-            max_y = @maximum(line.y[0], line.y[1]);
-        } else {
-            min_x = std.math.min3(min_x, line.x[0], line.x[1]);
-            max_x = std.math.max3(max_x, line.y[0], line.y[1]);
-            min_y = std.math.min3(min_y, line.y[0], line.y[1]);
-            max_y = std.math.max3(max_y, line.y[0], line.y[1]);
-        }
+
+        min_x = std.math.min3(min_x, line.x[0], line.x[1]);
+        max_x = std.math.max3(max_x, line.x[0], line.x[1]);
+        min_y = std.math.min3(min_y, line.y[0], line.y[1]);
+        max_y = std.math.max3(max_y, line.y[0], line.y[1]);
     }
 
     lower_left.* = .{ min_x, min_y };
