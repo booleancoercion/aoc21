@@ -11,6 +11,7 @@ const Days = struct {
     pub const day4 = @import("day4.zig");
     pub const day5 = @import("day5.zig");
     pub const day6 = @import("day6.zig");
+    pub const day7 = @import("day7.zig");
 };
 
 const days: usize = std.meta.declarations(Days).len;
