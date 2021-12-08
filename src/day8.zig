@@ -147,9 +147,57 @@ fn bruteforceOpts(entry: *const Entry, letter_opts: *const [7][7]bool) [7]usize 
     unreachable; // the loop must find a consistent option
 }
 
+// this is so ugly
 fn getPossibleMeanings(letter_opts: *const [7][7]bool) [8][7]usize {
-    _ = letter_opts;
-    unreachable; // todo
+    var meanings: [8][7]usize = undefined;
+
+    for (meanings) |*meaning, i| {
+        const choices: [3]bool = getChoices(i);
+        var choice_idx: usize = 0;
+
+        var occupied: [7]bool = .{false} ** 7;
+
+        for (letter_opts) |*letter, letter_num| {
+            var available: i32 = 0;
+            for (letter) |opt, idx| {
+                if (!opt) continue;
+                if (occupied[idx]) continue;
+                available += 1;
+            }
+            const needs_choice = available == 2;
+            var chosen: bool = false;
+            for (letter) |opt, idx| {
+                if (!opt) continue;
+                if (occupied[idx]) continue;
+                if (!needs_choice or chosen) {
+                    meaning[letter_num] = idx;
+                    occupied[idx] = true;
+                    break;
+                }
+
+                if (!choices[choice_idx]) {
+                    choice_idx += 1;
+                    meaning[letter_num] = idx;
+                    occupied[idx] = true;
+                    break;
+                } else {
+                    choice_idx += 1;
+                    chosen = true;
+                    continue;
+                }
+            }
+        }
+    }
+
+    return meanings;
+}
+
+fn getChoices(x: usize) [3]bool {
+    return .{
+        x & 0b001 != 0,
+        x & 0b010 != 0,
+        x & 0b100 != 0,
+    };
 }
 
 fn isConsistent(entry: *const Entry, meaning: *const [7]usize) bool {
