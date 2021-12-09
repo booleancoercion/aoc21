@@ -6,6 +6,7 @@ const input = @embedFile("../inputs/dayX.txt");
 
 pub fn run(alloc: *Allocator, stdout: anytype) !void {}
 
+const eql = std.mem.eql;
 const tokenize = std.mem.tokenize;
 const split = std.mem.split;
 const count = std.mem.count;
