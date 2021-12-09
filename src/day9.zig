@@ -49,6 +49,10 @@ fn part2(
     var to_check = PointSet.init(alloc);
     var latest = PointSet.init(alloc);
 
+    defer visited.deinit();
+    defer to_check.deinit();
+    defer latest.deinit();
+
     for (low_points.items) |point| {
         const basin = try heightmap.getBasinSize(point, &visited, &to_check, &latest);
         updateBiggest(&biggest, @intCast(i32, basin));
