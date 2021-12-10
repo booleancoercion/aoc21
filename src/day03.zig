@@ -3,7 +3,7 @@ const Allocator = std.mem.Allocator;
 const TailQueue = std.TailQueue(IntType);
 const Node = TailQueue.Node;
 
-const input = @embedFile("../inputs/day3.txt");
+const input = @embedFile("../inputs/day03.txt");
 
 const IntType = u16;
 const int_size = @bitSizeOf(IntType);

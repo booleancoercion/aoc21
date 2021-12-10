@@ -3,7 +3,7 @@ const Allocator = std.mem.Allocator;
 const TokenIterator = std.mem.TokenIterator;
 const BoardList = std.TailQueue(*Board);
 
-const input = @embedFile("../inputs/day4.txt");
+const input = @embedFile("../inputs/day04.txt");
 
 const board_side = 5;
 

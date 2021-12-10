@@ -6,7 +6,7 @@ const HashMap = std.AutoHashMap;
 
 const PointSet = HashMap(Point, void);
 
-const input = @embedFile("../inputs/day9.txt");
+const input = @embedFile("../inputs/day09.txt");
 
 pub fn run(alloc: *Allocator, stdout: anytype) !void {
     const heightmap = try Heightmap.init(alloc, input);

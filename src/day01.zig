@@ -1,7 +1,7 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
-const input = @embedFile("../inputs/day1.txt");
+const input = @embedFile("../inputs/day01.txt");
 
 pub fn run(alloc: *Allocator, stdout: anytype) !void {
     _ = alloc;

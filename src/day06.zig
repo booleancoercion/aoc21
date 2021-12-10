@@ -2,7 +2,7 @@ const std = @import("std");
 const helper = @import("helper.zig");
 const Allocator = std.mem.Allocator;
 
-const input = @embedFile("../inputs/day6.txt");
+const input = @embedFile("../inputs/day06.txt");
 
 const valid_values = 9;
 

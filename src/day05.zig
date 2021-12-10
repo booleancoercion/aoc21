@@ -1,7 +1,7 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
-const input = @embedFile("../inputs/day5.txt");
+const input = @embedFile("../inputs/day05.txt");
 const i32_max: i32 = std.math.maxInt(i32);
 const i32_min: i32 = std.math.minInt(i32);
 

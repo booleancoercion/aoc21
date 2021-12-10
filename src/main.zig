@@ -5,15 +5,15 @@ const Writer = std.io.Writer;
 const art = @embedFile("../art.txt");
 
 const Days = struct {
-    pub const day1 = @import("day1.zig");
-    pub const day2 = @import("day2.zig");
-    pub const day3 = @import("day3.zig");
-    pub const day4 = @import("day4.zig");
-    pub const day5 = @import("day5.zig");
-    pub const day6 = @import("day6.zig");
-    pub const day7 = @import("day7.zig");
-    pub const day8 = @import("day8.zig");
-    pub const day9 = @import("day9.zig");
+    pub const day01 = @import("day01.zig");
+    pub const day02 = @import("day02.zig");
+    pub const day03 = @import("day03.zig");
+    pub const day04 = @import("day04.zig");
+    pub const day05 = @import("day05.zig");
+    pub const day06 = @import("day06.zig");
+    pub const day07 = @import("day07.zig");
+    pub const day08 = @import("day08.zig");
+    pub const day09 = @import("day09.zig");
     pub const day10 = @import("day10.zig");
 };
 
@@ -37,7 +37,7 @@ pub fn main() !void {
         std.log.err("Invalid day number!\n", .{});
     } else {
         var buffer: [5]u8 = undefined;
-        const day = try std.fmt.bufPrint(&buffer, "day{}", .{num});
+        const day = try std.fmt.bufPrint(&buffer, "day{d:0>2}", .{num});
 
         inline for (std.meta.declarations(Days)) |decl| {
             if (std.mem.eql(u8, day, decl.name)) {

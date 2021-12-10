@@ -5,7 +5,7 @@ const ArrayList = std.ArrayList;
 const Inst = union(enum) { forward: i32, down: i32, up: i32 };
 const Day2Err = error{InvalidInstruction};
 
-const input = @embedFile("../inputs/day2.txt");
+const input = @embedFile("../inputs/day02.txt");
 
 pub fn run(alloc: *Allocator, stdout: anytype) !void {
     const parsed: ArrayList(Inst) = try parseInput(alloc);
