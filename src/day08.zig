@@ -47,7 +47,7 @@ const Entry = struct {
     }
 };
 
-pub fn run(alloc: *Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout: anytype) !void {
     const parsed = try parseInput(alloc);
     defer alloc.free(parsed);
 
@@ -249,7 +249,7 @@ fn decipherEntry(entry: *const Entry, letter_maps: [7]usize) i32 {
     return result;
 }
 
-fn parseInput(alloc: *Allocator) ![]Entry {
+fn parseInput(alloc: Allocator) ![]Entry {
     const num_lines = count(u8, input, "\n");
     var entries = try alloc.alloc(Entry, num_lines);
 

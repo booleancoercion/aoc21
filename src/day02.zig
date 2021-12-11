@@ -7,7 +7,7 @@ const Day2Err = error{InvalidInstruction};
 
 const input = @embedFile("../inputs/day02.txt");
 
-pub fn run(alloc: *Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout: anytype) !void {
     const parsed: ArrayList(Inst) = try parseInput(alloc);
     defer parsed.deinit();
 
@@ -50,7 +50,7 @@ fn part2(parsed: []const Inst) !i64 {
 }
 
 /// Caller must deinit return value with a call to `.deinit()` when done.
-fn parseInput(alloc: *Allocator) !ArrayList(Inst) {
+fn parseInput(alloc: Allocator) !ArrayList(Inst) {
     var list = ArrayList(Inst).init(alloc);
 
     var lines = std.mem.tokenize(u8, input, "\r\n");

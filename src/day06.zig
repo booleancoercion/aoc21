@@ -6,7 +6,7 @@ const input = @embedFile("../inputs/day06.txt");
 
 const valid_values = 9;
 
-pub fn run(alloc: *Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout: anytype) !void {
     const fish = try parseInput(alloc);
     defer alloc.free(fish);
 
@@ -36,7 +36,7 @@ fn simulate(fish: []u8, simulation_time: i32) i64 {
     return helper.sum(i64, &amounts);
 }
 
-fn parseInput(alloc: *Allocator) ![]u8 {
+fn parseInput(alloc: Allocator) ![]u8 {
     var tokens = tokenize(u8, input, ",\n");
     const fish_amt = count(u8, input, ",") + 1;
 

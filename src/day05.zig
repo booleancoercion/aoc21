@@ -81,14 +81,14 @@ const Line = struct {
 
 const Board = struct {
     map: []i32, // maps Point -> Count (as a matrix)
-    alloc: *Allocator,
+    alloc: Allocator,
     bottom_left: [2]i32,
     x_length: usize,
     y_length: usize,
 
     const Self = @This();
 
-    pub fn init(alloc: *Allocator, bottom_left: [2]i32, top_right: [2]i32) !Self {
+    pub fn init(alloc: Allocator, bottom_left: [2]i32, top_right: [2]i32) !Self {
         const x_length = @intCast(usize, top_right[0] - bottom_left[0] + 1);
         const y_length = @intCast(usize, top_right[1] - bottom_left[1] + 1);
 
@@ -132,7 +132,7 @@ const Board = struct {
     }
 };
 
-pub fn run(alloc: *Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout: anytype) !void {
     var bottom_left: [2]i32 = undefined;
     var top_right: [2]i32 = undefined;
     const lines = try parseInput(alloc, &bottom_left, &top_right);
@@ -168,7 +168,7 @@ fn part2(lines: []Line, board: *Board) i32 {
     return counter;
 }
 
-fn parseInput(alloc: *Allocator, lower_left: *[2]i32, top_right: *[2]i32) ![]Line {
+fn parseInput(alloc: Allocator, lower_left: *[2]i32, top_right: *[2]i32) ![]Line {
     const line_num = std.mem.count(u8, input, "\n");
     var linelist = try alloc.alloc(Line, line_num);
 

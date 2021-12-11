@@ -8,7 +8,7 @@ const PointSet = HashMap(Point, void);
 
 const input = @embedFile("../inputs/day09.txt");
 
-pub fn run(alloc: *Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout: anytype) !void {
     const heightmap = try Heightmap.init(alloc, input);
     defer heightmap.deinit();
 
@@ -39,7 +39,7 @@ fn part1(heightmap: *const Heightmap, low_points: *ArrayList(Point)) !i32 {
 }
 
 fn part2(
-    alloc: *Allocator,
+    alloc: Allocator,
     heightmap: *const Heightmap,
     low_points: *const ArrayList(Point),
 ) !i32 {
@@ -80,14 +80,14 @@ const Point = struct {
 };
 
 const Heightmap = struct {
-    allocator: *Allocator,
+    allocator: Allocator,
     m: usize,
     n: usize,
     data: []const u8,
 
     const Self = @This();
 
-    pub fn init(alloc: *Allocator, inp: []const u8) !Self {
+    pub fn init(alloc: Allocator, inp: []const u8) !Self {
         var lines = tokenize(u8, inp, "\r\n");
         const n = lines.next().?.len;
 

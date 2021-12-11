@@ -4,7 +4,7 @@ const Allocator = std.mem.Allocator;
 
 const input = @embedFile("../inputs/day07.txt");
 
-pub fn run(alloc: *Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout: anytype) !void {
     const parsed = try parseInput(alloc);
     defer alloc.free(parsed);
 
@@ -15,7 +15,7 @@ pub fn run(alloc: *Allocator, stdout: anytype) !void {
     try stdout.print("Part 2: {}\n", .{res2});
 }
 
-fn part1(alloc: *Allocator, parsed: []i32) !i32 {
+fn part1(alloc: Allocator, parsed: []i32) !i32 {
     var crab_copy = try alloc.dupe(i32, parsed);
     defer alloc.free(crab_copy);
 
@@ -63,7 +63,7 @@ fn nsum(x: i32) i32 {
     return @divExact(x * (x + 1), 2);
 }
 
-fn parseInput(alloc: *Allocator) ![]i32 {
+fn parseInput(alloc: Allocator) ![]i32 {
     const num_crabs = count(u8, input, ",") + 1;
     var crab_arr = try alloc.alloc(i32, num_crabs);
 

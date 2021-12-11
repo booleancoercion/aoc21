@@ -6,7 +6,7 @@ const input = @embedFile("../inputs/day11.txt");
 
 const grid_size = 10;
 
-pub fn run(alloc: *Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout: anytype) !void {
     _ = alloc;
 
     var grid = OctoGrid.init(input);

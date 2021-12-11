@@ -5,7 +5,7 @@ const ArrayList = std.ArrayList;
 
 const input = @embedFile("../inputs/day10.txt");
 
-pub fn run(alloc: *Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout: anytype) !void {
     var lines = tokenize(u8, input, "\r\n");
 
     var corrupted_sum: i64 = 0;

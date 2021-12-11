@@ -10,7 +10,7 @@ const int_size = @bitSizeOf(IntType);
 
 var real_length: i32 = 0;
 
-pub fn run(alloc: *Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout: anytype) !void {
     const parsed = try parseInput(alloc);
     defer alloc.free(parsed);
 
@@ -54,7 +54,7 @@ const BitCriteria = enum {
     least_common,
 };
 
-fn part2(alloc: *Allocator, parsed: []IntType) !i32 {
+fn part2(alloc: Allocator, parsed: []IntType) !i32 {
     var nodes: []Node = try alloc.alloc(Node, parsed.len);
     defer alloc.free(nodes);
     for (parsed) |num, i| {
@@ -124,7 +124,7 @@ fn getMask(val: anytype) IntType {
     return std.math.shl(IntType, 1, val);
 }
 
-fn parseInput(alloc: *Allocator) ![]IntType {
+fn parseInput(alloc: Allocator) ![]IntType {
     var lines = std.mem.tokenize(u8, input, "\r\n");
 
     const length = std.mem.count(u8, input, "\n"); // no. of lines

@@ -23,7 +23,7 @@ const days: usize = std.meta.declarations(Days).len;
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
-    const alloc = &arena.allocator;
+    const alloc = arena.allocator();
 
     const stdout = std.io.getStdOut().writer();
     try stdout.print("{s}\n", .{art});

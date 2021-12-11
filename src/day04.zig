@@ -76,7 +76,7 @@ const Board = struct {
 };
 
 const Input = struct {
-    allocator: *Allocator,
+    allocator: Allocator,
     sequence: []const u8,
     boards: []Board,
 
@@ -86,7 +86,7 @@ const Input = struct {
     }
 };
 
-pub fn run(alloc: *Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout: anytype) !void {
     const parsed = try parseInput(alloc);
     defer parsed.free();
 
@@ -109,7 +109,7 @@ fn part1(parsed: Input) i32 {
     unreachable;
 }
 
-fn part2(alloc: *Allocator, parsed: Input) !i32 {
+fn part2(alloc: Allocator, parsed: Input) !i32 {
     const board_nodes = try alloc.alloc(BoardList.Node, parsed.boards.len);
     defer alloc.free(board_nodes);
 
@@ -139,7 +139,7 @@ fn part2(alloc: *Allocator, parsed: Input) !i32 {
     unreachable;
 }
 
-fn parseInput(alloc: *Allocator) !Input {
+fn parseInput(alloc: Allocator) !Input {
     var tokens = std.mem.tokenize(u8, input, "\r\n");
     const first_line = tokens.next().?;
 
@@ -149,7 +149,7 @@ fn parseInput(alloc: *Allocator) !Input {
     return Input{ .allocator = alloc, .sequence = sequence, .boards = boards };
 }
 
-fn parseBoards(alloc: *Allocator, tokens_c: TokenIterator(u8)) ![]Board {
+fn parseBoards(alloc: Allocator, tokens_c: TokenIterator(u8)) ![]Board {
     var tokens = tokens_c;
     // Each board has exactly (board_side + 1) newlines corresponding to it, except for the
     // last board which has one less (thus we add an extra 1)
@@ -182,7 +182,7 @@ fn parseBoards(alloc: *Allocator, tokens_c: TokenIterator(u8)) ![]Board {
     return boards;
 }
 
-fn parseSequence(alloc: *Allocator, line: []const u8) ![]u8 {
+fn parseSequence(alloc: Allocator, line: []const u8) ![]u8 {
     // every two numbers in the sequence are separated by a comma
     const seq_len = std.mem.count(u8, line, ",") + 1;
 
