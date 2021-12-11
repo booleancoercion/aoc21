@@ -94,7 +94,7 @@ pub fn run(alloc: Allocator, stdout: anytype) !void {
     for (parsed.boards) |*board| {
         board.reset();
     }
-    try stdout.print("Part 1: {}\n", .{try part2(alloc, parsed)});
+    try stdout.print("Part 2: {}\n", .{try part2(alloc, parsed)});
 }
 
 fn part1(parsed: Input) i32 {
