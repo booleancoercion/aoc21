@@ -5,6 +5,24 @@ const input = @embedFile("../inputs/day05.txt");
 const i32_max: i32 = std.math.maxInt(i32);
 const i32_min: i32 = std.math.minInt(i32);
 
+pub fn run(alloc: Allocator, stdout_: anytype) !void {
+    var bottom_left: [2]i32 = undefined;
+    var top_right: [2]i32 = undefined;
+    const lines = try parseInput(alloc, &bottom_left, &top_right);
+    defer alloc.free(lines);
+
+    var board = try Board.init(alloc, bottom_left, top_right);
+    defer board.deinit();
+
+    const res1 = part1(lines, &board);
+    const res2 = part2(lines, &board) + res1;
+
+    if (stdout_) |stdout| {
+        try stdout.print("Part 1: {}\n", .{res1});
+        try stdout.print("Part 2: {}\n", .{res2});
+    }
+}
+
 const LineKind = enum { const_x, const_y, diagonal };
 const Line = struct {
     x: [2]i32,
@@ -131,22 +149,6 @@ const Board = struct {
         self.alloc.free(self.map);
     }
 };
-
-pub fn run(alloc: Allocator, stdout: anytype) !void {
-    var bottom_left: [2]i32 = undefined;
-    var top_right: [2]i32 = undefined;
-    const lines = try parseInput(alloc, &bottom_left, &top_right);
-    defer alloc.free(lines);
-
-    var board = try Board.init(alloc, bottom_left, top_right);
-    defer board.deinit();
-
-    const res1 = part1(lines, &board);
-    const res2 = part2(lines, &board) + res1;
-
-    try stdout.print("Part 1: {}\n", .{res1});
-    try stdout.print("Part 2: {}\n", .{res2});
-}
 
 fn part1(lines: []Line, board: *Board) i32 {
     var counter: i32 = 0;

@@ -3,10 +3,16 @@ const Allocator = std.mem.Allocator;
 
 const input = @embedFile("../inputs/day01.txt");
 
-pub fn run(alloc: Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout_: anytype) !void {
     _ = alloc;
-    try stdout.print("Part 1: {}\n", .{try part1()});
-    try stdout.print("Part 2: {}\n", .{try part2()});
+
+    const res1 = try part1();
+    const res2 = try part2();
+
+    if (stdout_) |stdout| {
+        try stdout.print("Part 1: {}\n", .{res1});
+        try stdout.print("Part 2: {}\n", .{res2});
+    }
 }
 
 fn part1() !i32 {

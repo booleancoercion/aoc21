@@ -6,7 +6,7 @@ const input = @embedFile("../inputs/day11.txt");
 
 const grid_size = 10;
 
-pub fn run(alloc: Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout_: anytype) !void {
     _ = alloc;
 
     var grid = OctoGrid.init(input);
@@ -15,8 +15,10 @@ pub fn run(alloc: Allocator, stdout: anytype) !void {
     const res1 = grid.simulateMany(100);
     const res2 = grid2.getSyncStep();
 
-    try stdout.print("Part 1: {}\n", .{res1});
-    try stdout.print("Part 2: {}\n", .{res2});
+    if (stdout_) |stdout| {
+        try stdout.print("Part 1: {}\n", .{res1});
+        try stdout.print("Part 2: {}\n", .{res2});
+    }
 }
 
 const OctoGrid = struct {

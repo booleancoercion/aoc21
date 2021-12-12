@@ -25,9 +25,17 @@ pub fn build(b: *std.build.Builder) void {
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
 
-    const exe_tests = b.addTest("src/main.zig");
-    exe_tests.setBuildMode(mode);
+    const bench_exe = b.addExecutable("aoc21bench", "src/bench.zig");
+    bench_exe.setTarget(target);
+    bench_exe.setBuildMode(std.builtin.Mode.ReleaseFast);
+    const bench_install = b.addInstallArtifact(bench_exe);
 
-    const test_step = b.step("test", "Run unit tests");
-    test_step.dependOn(&exe_tests.step);
+    const run_bench = bench_exe.run();
+    run_bench.step.dependOn(&bench_install.step);
+    if (b.args) |args| {
+        run_bench.addArgs(args);
+    }
+
+    const bench_step = b.step("bench", "Benchmark the code");
+    bench_step.dependOn(&run_bench.step);
 }

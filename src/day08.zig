@@ -17,6 +17,19 @@ const digits: [10][7]bool = .{
     .{ true, true, true, true, false, true, true },
 };
 
+pub fn run(alloc: Allocator, stdout_: anytype) !void {
+    const parsed = try parseInput(alloc);
+    defer alloc.free(parsed);
+
+    const res1 = part1(parsed);
+    const res2 = part2(parsed);
+
+    if (stdout_) |stdout| {
+        try stdout.print("Part 1: {}\n", .{res1});
+        try stdout.print("Part 2: {}\n", .{res2});
+    }
+}
+
 const Entry = struct {
     input: [10][]const u8,
     output: [4][]const u8,
@@ -46,17 +59,6 @@ const Entry = struct {
         if (tokens.next() != null) unreachable;
     }
 };
-
-pub fn run(alloc: Allocator, stdout: anytype) !void {
-    const parsed = try parseInput(alloc);
-    defer alloc.free(parsed);
-
-    const res1 = part1(parsed);
-    const res2 = part2(parsed);
-
-    try stdout.print("Part 1: {}\n", .{res1});
-    try stdout.print("Part 2: {}\n", .{res2});
-}
 
 fn part1(parsed: []Entry) i32 {
     var counter: i32 = 0;

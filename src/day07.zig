@@ -4,15 +4,17 @@ const Allocator = std.mem.Allocator;
 
 const input = @embedFile("../inputs/day07.txt");
 
-pub fn run(alloc: Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout_: anytype) !void {
     const parsed = try parseInput(alloc);
     defer alloc.free(parsed);
 
     const res1 = try part1(alloc, parsed);
     const res2 = try part2(parsed);
 
-    try stdout.print("Part 1: {}\n", .{res1});
-    try stdout.print("Part 2: {}\n", .{res2});
+    if (stdout_) |stdout| {
+        try stdout.print("Part 1: {}\n", .{res1});
+        try stdout.print("Part 2: {}\n", .{res2});
+    }
 }
 
 fn part1(alloc: Allocator, parsed: []i32) !i32 {

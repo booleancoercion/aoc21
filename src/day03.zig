@@ -10,12 +10,17 @@ const int_size = @bitSizeOf(IntType);
 
 var real_length: i32 = 0;
 
-pub fn run(alloc: Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout_: anytype) !void {
     const parsed = try parseInput(alloc);
     defer alloc.free(parsed);
 
-    try stdout.print("Part 1: {}\n", .{part1(parsed)});
-    try stdout.print("Part 2: {}\n", .{try part2(alloc, parsed)});
+    const res1 = part1(parsed);
+    const res2 = try part2(alloc, parsed);
+
+    if (stdout_) |stdout| {
+        try stdout.print("Part 1: {}\n", .{res1});
+        try stdout.print("Part 2: {}\n", .{res2});
+    }
 }
 
 fn part1(parsed: []IntType) i32 {

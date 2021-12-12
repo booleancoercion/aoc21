@@ -5,7 +5,7 @@ const ArrayList = std.ArrayList;
 
 const input = @embedFile("../inputs/day10.txt");
 
-pub fn run(alloc: Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout_: anytype) !void {
     var lines = tokenize(u8, input, "\r\n");
 
     var corrupted_sum: i64 = 0;
@@ -30,8 +30,10 @@ pub fn run(alloc: Allocator, stdout: anytype) !void {
     sort(i64, items, {}, comptime std.sort.asc(i64));
     const incomplete_score = items[items.len / 2];
 
-    try stdout.print("Part 1: {}\n", .{corrupted_sum});
-    try stdout.print("Part 2: {}\n", .{incomplete_score});
+    if (stdout_) |stdout| {
+        try stdout.print("Part 1: {}\n", .{corrupted_sum});
+        try stdout.print("Part 2: {}\n", .{incomplete_score});
+    }
 }
 
 fn calculateScores(

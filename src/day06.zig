@@ -6,14 +6,17 @@ const input = @embedFile("../inputs/day06.txt");
 
 const valid_values = 9;
 
-pub fn run(alloc: Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout_: anytype) !void {
     const fish = try parseInput(alloc);
     defer alloc.free(fish);
 
     const res1 = simulate(fish, 80);
     const res2 = simulate(fish, 256);
-    try stdout.print("Part 1: {}\n", .{res1});
-    try stdout.print("Part 2: {}\n", .{res2});
+
+    if (stdout_) |stdout| {
+        try stdout.print("Part 1: {}\n", .{res1});
+        try stdout.print("Part 2: {}\n", .{res2});
+    }
 }
 
 fn simulate(fish: []u8, simulation_time: i32) i64 {

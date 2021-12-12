@@ -7,6 +7,24 @@ const input = @embedFile("../inputs/day04.txt");
 
 const board_side = 5;
 
+pub fn run(alloc: Allocator, stdout_: anytype) !void {
+    const parsed = try parseInput(alloc);
+    defer parsed.free();
+
+    const res1 = part1(parsed);
+
+    for (parsed.boards) |*board| {
+        board.reset();
+    }
+
+    const res2 = try part2(alloc, parsed);
+
+    if (stdout_) |stdout| {
+        try stdout.print("Part 1: {}\n", .{res1});
+        try stdout.print("Part 2: {}\n", .{res2});
+    }
+}
+
 const Board = struct {
     nums: [board_side][board_side]u8,
     marks: [board_side][board_side]bool,
@@ -85,17 +103,6 @@ const Input = struct {
         self.allocator.free(self.boards);
     }
 };
-
-pub fn run(alloc: Allocator, stdout: anytype) !void {
-    const parsed = try parseInput(alloc);
-    defer parsed.free();
-
-    try stdout.print("Part 1: {}\n", .{part1(parsed)});
-    for (parsed.boards) |*board| {
-        board.reset();
-    }
-    try stdout.print("Part 2: {}\n", .{try part2(alloc, parsed)});
-}
 
 fn part1(parsed: Input) i32 {
     for (parsed.sequence) |num| {

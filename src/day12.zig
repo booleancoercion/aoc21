@@ -6,14 +6,16 @@ const HashMap = std.AutoHashMap;
 
 const input = @embedFile("../inputs/day12.txt");
 
-pub fn run(alloc: Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout_: anytype) !void {
     const graph = try CaveGraph.init(alloc, input);
 
     const res1 = try graph.countPathsNoRevisitSmall();
     const res2 = res1 + try graph.countPathsWithRevisitSmall();
 
-    try stdout.print("Part 1: {}\n", .{res1});
-    try stdout.print("Part 2: {}\n", .{res2});
+    if (stdout_) |stdout| {
+        try stdout.print("Part 1: {}\n", .{res1});
+        try stdout.print("Part 2: {}\n", .{res2});
+    }
 }
 
 const CaveGraph = struct {

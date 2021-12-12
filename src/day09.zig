@@ -8,7 +8,7 @@ const PointSet = HashMap(Point, void);
 
 const input = @embedFile("../inputs/day09.txt");
 
-pub fn run(alloc: Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout_: anytype) !void {
     const heightmap = try Heightmap.init(alloc, input);
     defer heightmap.deinit();
 
@@ -17,8 +17,10 @@ pub fn run(alloc: Allocator, stdout: anytype) !void {
     const res1 = try part1(&heightmap, &low_points);
     const res2 = try part2(alloc, &heightmap, &low_points);
 
-    try stdout.print("Part 1: {}\n", .{res1});
-    try stdout.print("Part 2: {}\n", .{res2});
+    if (stdout_) |stdout| {
+        try stdout.print("Part 1: {}\n", .{res1});
+        try stdout.print("Part 2: {}\n", .{res2});
+    }
 }
 
 fn part1(heightmap: *const Heightmap, low_points: *ArrayList(Point)) !i32 {

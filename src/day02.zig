@@ -7,12 +7,17 @@ const Day2Err = error{InvalidInstruction};
 
 const input = @embedFile("../inputs/day02.txt");
 
-pub fn run(alloc: Allocator, stdout: anytype) !void {
+pub fn run(alloc: Allocator, stdout_: anytype) !void {
     const parsed: ArrayList(Inst) = try parseInput(alloc);
     defer parsed.deinit();
 
-    try stdout.print("Part 1: {}\n", .{try part1(parsed.items)});
-    try stdout.print("Part 2: {}\n", .{try part2(parsed.items)});
+    const res1 = try part1(parsed.items);
+    const res2 = try part2(parsed.items);
+
+    if (stdout_) |stdout| {
+        try stdout.print("Part 1: {}\n", .{res1});
+        try stdout.print("Part 2: {}\n", .{res2});
+    }
 }
 
 fn part1(parsed: []const Inst) !i64 {
