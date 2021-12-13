@@ -9,8 +9,11 @@ const input = @embedFile("../inputs/day12.txt");
 pub fn run(alloc: Allocator, stdout_: anytype) !void {
     const graph = try CaveGraph.init(alloc, input);
 
-    const res1 = try graph.countPathsNoRevisitSmall();
-    const res2 = res1 + try graph.countPathsWithRevisitSmall();
+    var visited = try alloc.alloc(u8, graph.node_num);
+    defer alloc.free(visited);
+
+    const res1 = try graph.countPathsNoRevisitSmall(visited);
+    const res2 = res1 + try graph.countPathsWithRevisitSmall(visited);
 
     if (stdout_) |stdout| {
         try stdout.print("Part 1: {}\n", .{res1});
@@ -19,8 +22,8 @@ pub fn run(alloc: Allocator, stdout_: anytype) !void {
 }
 
 const CaveGraph = struct {
-    adjmat: []const bool,
-    nodes: StringHashMap(usize),
+    neighbors: []const []const usize,
+    neighbor_buffer: []const usize,
     big: []const bool,
     node_num: usize,
     start: usize,
@@ -31,20 +34,25 @@ const CaveGraph = struct {
 
     pub fn init(alloc: Allocator, str: []const u8) !Self {
         var nodes = StringHashMap(usize).init(alloc);
+        defer nodes.deinit();
         try Self.populateNodesMap(str, &nodes);
-
         const node_num = @intCast(usize, nodes.count());
+
         var adjmat = try alloc.alloc(bool, node_num * node_num);
+        defer alloc.free(adjmat);
         std.mem.set(bool, adjmat, false);
+        Self.populateAdj(str, adjmat, nodes, node_num);
 
         var big = try alloc.alloc(bool, node_num);
-
-        Self.populateAdj(str, adjmat, nodes, node_num);
         Self.populateBig(big, nodes);
 
+        var neighbor_buffer: []usize = undefined;
+        var neighbors: [][]usize = try alloc.alloc([]usize, node_num);
+        try Self.populateNeighbors(alloc, adjmat, neighbors, &neighbor_buffer, node_num);
+
         return Self{
-            .adjmat = adjmat,
-            .nodes = nodes,
+            .neighbors = neighbors,
+            .neighbor_buffer = neighbor_buffer,
             .big = big,
             .node_num = node_num,
             .allocator = alloc,
@@ -53,29 +61,58 @@ const CaveGraph = struct {
         };
     }
 
-    pub fn countPathsNoRevisitSmall(self: *const Self) !i32 {
-        var visited_map = HashMap(usize, void).init(self.allocator);
-        defer visited_map.deinit();
-        return self.countPathsInner(self.start, &visited_map, null, true);
+    fn populateNeighbors(
+        alloc: Allocator,
+        adjmat: []const bool,
+        neighbors: [][]usize,
+        neighbor_buffer: *[]usize,
+        node_num: usize,
+    ) !void {
+        var neighbor_num: usize = 0;
+        for (adjmat) |val| {
+            neighbor_num += @intCast(usize, @boolToInt(val));
+        }
+
+        neighbor_buffer.* = try alloc.alloc(usize, neighbor_num);
+        var start: usize = 0;
+        var end: usize = 0;
+        var node: usize = 0;
+        while (node < node_num) : (node += 1) {
+            start = end;
+            var other: usize = 0;
+            while (other < node_num) : (other += 1) {
+                if (adjmat[node * node_num + other]) {
+                    neighbor_buffer.*[end] = other;
+                    end += 1;
+                }
+            }
+
+            neighbors[node] = neighbor_buffer.*[start..end];
+        }
     }
 
-    pub fn countPathsWithRevisitSmall(self: *const Self) !i32 {
-        var visited_map = HashMap(usize, void).init(self.allocator);
-        defer visited_map.deinit();
+    pub fn countPathsNoRevisitSmall(self: *const Self, visited: []u8) !i32 {
+        std.mem.set(u8, visited, 0);
+        return self.countPathsInner(self.start, visited, null);
+    }
+
+    pub fn countPathsWithRevisitSmall(self: *const Self, visited: []u8) !i32 {
+        std.mem.set(u8, visited, 0);
 
         var sum: i32 = 0;
         var node: usize = 0;
         while (node < self.node_num) : (node += 1) {
             if (self.big[node]) continue;
             if (node == self.start or node == self.end) continue;
-            sum += try self.countPathsInner(self.start, &visited_map, node, false);
+            sum += try self.countPathsInner(self.start, visited, node);
         }
 
         return sum;
     }
 
     pub fn deinit(self: Self) void {
-        self.allocator.free(self.adjmat);
+        self.allocator.free(self.neighbors);
+        self.allocator.free(self.neighbor_buffer);
         self.allocator.free(self.big);
         self.nodes.deinit();
     }
@@ -83,52 +120,35 @@ const CaveGraph = struct {
     fn countPathsInner(
         self: *const Self,
         node: usize,
-        visited_map: *HashMap(usize, void),
+        visited: []u8,
         may_visit_twice: ?usize,
-        visited_twice: bool,
     ) Allocator.Error!i32 {
         if (node == self.end) {
-            if (!visited_twice) return 0;
+            if (may_visit_twice) |visitor| {
+                if (visited[visitor] != 2) return 0;
+            }
             return 1;
         }
-        if (!self.big[node]) try visited_map.put(node, {});
+        if (!self.big[node]) visited[node] += 1;
         defer if (!self.big[node]) {
-            // this is formatted stupidly because of a compiler error,
-            // see: <https://github.com/ziglang/zig/issues/6059>
-            if (!visited_twice) {
-                _ = visited_map.remove(node);
-            } else if (node != may_visit_twice) {
-                _ = visited_map.remove(node);
-            }
+            visited[node] -= 1;
         };
 
         var sum: i32 = 0;
-        var other: usize = 0;
-        while (other < self.node_num) : (other += 1) {
-            if (!self.getAdj(node, other)) continue;
-
-            var visited_twice_mod = visited_twice;
-            if (visited_map.contains(other)) {
-                // you guessed it, same compiler error
-                if (other == may_visit_twice) {
-                    if (!visited_twice) {
-                        visited_twice_mod = true;
-                    } else {
-                        continue;
+        for (self.neighbors[node]) |other| {
+            blk: {
+                if (visited[other] != 0) {
+                    if (other == may_visit_twice) {
+                        if (visited[other] < 2) break :blk;
                     }
-                } else {
                     continue;
                 }
             }
 
-            sum += try self.countPathsInner(other, visited_map, may_visit_twice, visited_twice_mod);
+            sum += try self.countPathsInner(other, visited, may_visit_twice);
         }
 
         return sum;
-    }
-
-    fn getAdj(self: *const Self, i: usize, j: usize) bool {
-        return self.adjmat[i * self.node_num + j];
     }
 
     fn populateNodesMap(str: []const u8, nodes: *StringHashMap(usize)) !void {
