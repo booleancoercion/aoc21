@@ -13,6 +13,7 @@ pub fn run(alloc: Allocator, stdout_: anytype) !void {
     defer heightmap.deinit();
 
     var low_points = ArrayList(Point).init(alloc);
+    defer low_points.deinit();
 
     const res1 = try part1(&heightmap, &low_points);
     const res2 = try part2(alloc, &heightmap, &low_points);

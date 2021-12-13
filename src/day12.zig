@@ -8,6 +8,7 @@ const input = @embedFile("../inputs/day12.txt");
 
 pub fn run(alloc: Allocator, stdout_: anytype) !void {
     const graph = try CaveGraph.init(alloc, input);
+    defer graph.deinit();
 
     var visited = try alloc.alloc(u8, graph.node_num);
     defer alloc.free(visited);
@@ -114,7 +115,6 @@ const CaveGraph = struct {
         self.allocator.free(self.neighbors);
         self.allocator.free(self.neighbor_buffer);
         self.allocator.free(self.big);
-        self.nodes.deinit();
     }
 
     fn countPathsInner(
