@@ -4,7 +4,7 @@ const Allocator = std.mem.Allocator;
 
 const input = @embedFile("../inputs/dayX.txt");
 
-pub fn run(alloc: Allocator, stdout: anytype) !void {}
+pub fn run(alloc: Allocator, stdout_: anytype) !void {}
 
 const eql = std.mem.eql;
 const tokenize = std.mem.tokenize;
