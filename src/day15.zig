@@ -99,49 +99,48 @@ const DijkstraGrid = struct {
     }
 
     fn neighbors_iter(self: *const Self, pt: Point) NeighborIterator {
-        return NeighborIterator{ .dg = self, .point = pt };
+        return NeighborIterator{
+            .dg = self,
+            .point = NeighborIterator.SignedPoint{
+                .x = @intCast(isize, pt.x),
+                .y = @intCast(isize, pt.y),
+            },
+        };
     }
 
     const NeighborIterator = struct {
         dg: *const DijkstraGrid,
-        point: Point,
-        counter: u8 = 0,
+        point: SignedPoint,
+        index: usize = 0,
+
+        const offsets: [4]SignedPoint = .{
+            .{ .x = -1, .y = 0 },
+            .{ .x = 0, .y = -1 },
+            .{ .x = 1, .y = 0 },
+            .{ .x = 0, .y = 1 },
+        };
 
         pub fn next(self: *@This()) ?Point {
             const pt = self.point;
-            const m = self.dg.grid.m;
-            const n = self.dg.grid.n;
+            const grid = self.dg.grid;
+            while (self.index < 4) {
+                const of = offsets[self.index];
+                self.index += 1;
 
-            if (self.counter == 0) {
-                self.counter += 1;
-                if (pt.x != 0) {
-                    return Point{ .x = pt.x - 1, .y = pt.y };
-                }
-            }
+                const newpoint = SignedPoint{ .x = of.x + pt.x, .y = of.y + pt.y };
+                if (newpoint.x < 0 or newpoint.x >= grid.m) continue;
+                if (newpoint.y < 0 or newpoint.y >= grid.n) continue;
 
-            if (self.counter == 1) {
-                self.counter += 1;
-                if (pt.y != 0) {
-                    return Point{ .x = pt.x, .y = pt.y - 1 };
-                }
-            }
-
-            if (self.counter == 2) {
-                self.counter += 1;
-                if (pt.x + 1 < m) {
-                    return Point{ .x = pt.x + 1, .y = pt.y };
-                }
-            }
-
-            if (self.counter == 3) {
-                self.counter += 1;
-                if (pt.y + 1 < n) {
-                    return Point{ .x = pt.x, .y = pt.y + 1 };
-                }
+                return Point{
+                    .x = @intCast(usize, newpoint.x),
+                    .y = @intCast(usize, newpoint.y),
+                };
             }
 
             return null;
         }
+
+        const SignedPoint = struct { x: isize, y: isize };
     };
 
     const Point = struct { x: usize, y: usize };
