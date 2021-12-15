@@ -48,7 +48,7 @@ fn bench(alloc: Allocator, run: anytype, stdout: anytype) !void {
     var best_time: usize = std.math.maxInt(usize);
     var total_time: usize = 0;
     const num_runs = 10000;
-    while (i < num_runs) : (i += 1) {
+    while (i < num_runs and total_time < 20 * 1000 * 1000 * 1000) : (i += 1) {
         if (i % 100 == 0) {
             try stdout.print("\rIteration no. {}", .{i});
         }
@@ -64,7 +64,7 @@ fn bench(alloc: Allocator, run: anytype, stdout: anytype) !void {
     try printTime(stdout, best_time);
 
     try stdout.print("avg: ", .{});
-    try printTime(stdout, total_time / num_runs);
+    try printTime(stdout, total_time / i);
 }
 
 fn printTime(stdout: anytype, time: u64) !void {
