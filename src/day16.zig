@@ -24,9 +24,23 @@ pub fn run(alloc: Allocator, stdout_: anytype) !void {
 }
 
 fn convertToBinary(alloc: Allocator, data: []const u8) ![]const u1 {
-    _ = alloc;
-    _ = data;
-    unreachable;
+    var list = try ArrayList(u1).initCapacity(alloc, data.len * 4); // 4 bits per hex digit, *not* 8
+    defer list.deinit();
+
+    for (data) |hexdigit| {
+        if (!std.ascii.isXDigit(hexdigit)) continue;
+        const num = try parseUnsigned(u4, &.{hexdigit}, 16);
+        inline for (.{ 3, 2, 1, 0 }) |i| {
+            try list.append(getBit(num, i));
+        }
+    }
+
+    return list.toOwnedSlice();
+}
+
+fn getBit(num: u4, i: u2) u1 {
+    const one: u4 = 1;
+    return @boolToInt(num & (one << i) != 0);
 }
 
 fn calculateVersionSum(packet: Packet) i64 {
@@ -34,7 +48,7 @@ fn calculateVersionSum(packet: Packet) i64 {
         .literal => return packet.version,
         .operator => |data| {
             var sum: i64 = packet.version;
-            for (data.subpackets.items) |subpacket| {
+            for (data.subpackets) |subpacket| {
                 sum += calculateVersionSum(subpacket);
             }
 
@@ -51,7 +65,7 @@ const Packet = struct {
         literal: []const u1,
         operator: struct {
             length_type: u1,
-            subpackets: ArrayList(Packet),
+            subpackets: []Packet,
         },
     },
 };
@@ -64,8 +78,98 @@ const PacketParser = struct {
     const Self = @This();
 
     pub fn get(self: *Self) Allocator.Error!Packet {
-        _ = self;
-        unreachable;
+        const start = self.idx;
+        const version = self.getN(3);
+        const id = self.getN(3);
+
+        if (id == 4) {
+            return self.getLiteral(start, version, id);
+        } else {
+            return self.getOperator(start, version, id);
+        }
+    }
+
+    fn getLiteral(self: *Self, start: usize, version: u3, id: u3) Packet {
+        const literal_start = self.idx;
+        while (self.binary[self.idx] == 1) : (self.idx += 5) {}
+        self.idx += 5; // also consume the last section that starts with a 0
+
+        const literal = self.binary[literal_start..self.idx];
+
+        return Packet{
+            .version = version,
+            .id = id,
+            .bin_len = (self.idx - start),
+            .kind = .{
+                .literal = literal,
+            },
+        };
+    }
+
+    fn getOperator(self: *Self, start: usize, version: u3, id: u3) Allocator.Error!Packet {
+        const length_type: u1 = self.binary[self.idx];
+        self.idx += 1;
+
+        const subpackets = if (length_type == 0) // total length in bits is provided
+            try self.getSubpacketsWithBitLength()
+        else // number of sub-packets immediately contained is provided
+            try self.getSubpacketsWithNumber();
+
+        return Packet{
+            .version = version,
+            .id = id,
+            .bin_len = (self.idx - start),
+            .kind = .{ .operator = .{
+                .length_type = length_type,
+                .subpackets = subpackets,
+            } },
+        };
+    }
+
+    fn getSubpacketsWithBitLength(self: *Self) Allocator.Error![]Packet {
+        var packets = ArrayList(Packet).init(self.alloc);
+        defer packets.deinit();
+
+        const limit_bit_length = @intCast(usize, self.getN(15));
+        var total_bit_length: usize = 0;
+        while (total_bit_length < limit_bit_length) {
+            const packet = try self.get();
+            try packets.append(packet);
+            total_bit_length += packet.bin_len;
+        }
+
+        return packets.toOwnedSlice();
+    }
+
+    fn getSubpacketsWithNumber(self: *Self) Allocator.Error![]Packet {
+        var packets = ArrayList(Packet).init(self.alloc);
+        defer packets.deinit();
+
+        const limit_num: u11 = self.getN(11);
+        var total_num: u11 = 0;
+        while (total_num < limit_num) : (total_num += 1) {
+            const packet = try self.get();
+            try packets.append(packet);
+        }
+
+        return packets.toOwnedSlice();
+    }
+
+    fn getN(self: *Self, comptime n: u16) std.meta.Int(.unsigned, n) {
+        if (self.idx + n >= self.binary.len) unreachable;
+        const idx = self.idx;
+        const binary = self.binary;
+
+        defer self.idx += n;
+        var sum: std.meta.Int(.unsigned, n) = 0;
+
+        comptime var i = 0;
+        inline while (i < n) : (i += 1) {
+            sum = sum << 1;
+            sum += binary[idx + i];
+        }
+
+        return sum;
     }
 };
 
