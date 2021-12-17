@@ -17,9 +17,11 @@ pub fn run(alloc: Allocator, stdout_: anytype) !void {
     const outer_packet = try packet_parser.get();
 
     const res1 = calculateVersionSum(outer_packet);
+    const res2 = outer_packet.eval();
 
     if (stdout_) |stdout| {
         try stdout.print("Part 1: {}\n", .{res1});
+        try stdout.print("Part 2: {}\n", .{res2});
     }
 }
 
@@ -68,6 +70,90 @@ const Packet = struct {
             subpackets: []Packet,
         },
     },
+
+    const Self = @This();
+
+    pub fn eval(self: Self) i64 {
+        switch (self.kind) {
+            .literal => |binary| return evalLiteral(binary),
+            .operator => |data| {
+                const packets = data.subpackets;
+                switch (self.id) {
+                    0 => return evalSum(packets),
+                    1 => return evalProduct(packets),
+                    2 => return evalMin(packets),
+                    3 => return evalMax(packets),
+                    5 => return evalGT(packets),
+                    6 => return evalLT(packets),
+                    7 => return evalEQ(packets),
+                    else => unreachable,
+                }
+            },
+        }
+    }
+
+    fn evalLiteral(binary: []const u1) i64 {
+        var sum: i64 = 0;
+        var i: usize = 0;
+        while (i < binary.len) : (i += 1) {
+            if (i % 5 == 0) continue; // skip every 5th control bit
+            sum = sum << 1;
+            sum += binary[i];
+        }
+
+        return sum;
+    }
+
+    fn evalSum(packets: []const Packet) i64 {
+        var sum: i64 = 0;
+        for (packets) |packet| {
+            sum += packet.eval();
+        }
+        return sum;
+    }
+
+    fn evalProduct(packets: []const Packet) i64 {
+        var product: i64 = 1;
+        for (packets) |packet| {
+            product *= packet.eval();
+        }
+        return product;
+    }
+
+    fn evalMin(packets: []const Packet) i64 {
+        var min: i64 = std.math.maxInt(i64);
+        for (packets) |packet| {
+            const val = packet.eval();
+            if (val < min) min = val;
+        }
+
+        return min;
+    }
+
+    fn evalMax(packets: []const Packet) i64 {
+        var max: i64 = std.math.minInt(i64);
+        for (packets) |packet| {
+            const val = packet.eval();
+            if (val > max) max = val;
+        }
+
+        return max;
+    }
+
+    fn evalGT(packets: []const Packet) i64 {
+        if (packets.len != 2) unreachable;
+        return @boolToInt(packets[0].eval() > packets[1].eval());
+    }
+
+    fn evalLT(packets: []const Packet) i64 {
+        if (packets.len != 2) unreachable;
+        return @boolToInt(packets[0].eval() < packets[1].eval());
+    }
+
+    fn evalEQ(packets: []const Packet) i64 {
+        if (packets.len != 2) unreachable;
+        return @boolToInt(packets[0].eval() == packets[1].eval());
+    }
 };
 
 const PacketParser = struct {
