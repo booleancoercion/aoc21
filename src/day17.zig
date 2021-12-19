@@ -13,23 +13,27 @@ pub fn run(alloc: Allocator, stdout_: anytype) !void {
 
     const res1 = getMaxYPossible(stepnums, area);
 
+    var velmap = HashMap(Point, void).init(alloc);
+    defer velmap.deinit();
+
+    try calculateAllVelocities(stepnums, area, &velmap);
+    const res2 = velmap.count();
+
     if (stdout_) |stdout| {
         try stdout.print("Part 1: {}\n", .{res1});
+        try stdout.print("Part 2: {}\n", .{res2});
     }
 }
 
-fn getMaxYPossible(stepnums: HashMap(i64, void), area: Area) i64 {
+fn getMaxYPossible(stepnums: HashMap(Point, void), area: Area) i64 {
     var max: i64 = std.math.minInt(i64);
-    std.log.info("min i64: {}", .{max});
     var keys = stepnums.keyIterator();
     while (keys.next()) |steps| {
         // if this was more complicated to solve, we'd have to iterate over all
         // possible values of y in a loop - however, since this is essentially
         // solving a linear equation, we can do the whole area at once as an
         // optimization.
-        if (getPositiveY(steps.*, area)) |y| {
-            max = std.math.max(max, y);
-        } else if (getNegativeY(steps.*, area)) |y| {
+        if (getPositiveY(steps.y, area)) |y| {
             max = std.math.max(max, y);
         }
     }
@@ -38,31 +42,14 @@ fn getMaxYPossible(stepnums: HashMap(i64, void), area: Area) i64 {
 }
 
 fn getPositiveY(steps: i64, area: Area) ?i64 {
-    // trying to solve:
-    // -(y_init + (y_init - 1) + ... + 1 + 0 - 1 - ... - (steps - y_init - 1)) = t
-    // y_init + (y_init - 1) + ... + 1 + 0 - 1 - ... - (steps - y_init - 1) = -t
-    //
-    // this reduces to:
-    // steps^2 - 3steps + 2 + t = (2steps - 2)y_init
-    // which is solved by:
-    // y_init = (steps^2 - 3steps + 2 + t)/(2steps - 2)
-    // (there's a prettier form but it's harder to verify that there's an integer solution for it)
-    //
-    // to solve an inequality f(y_init, steps) <= t where f is the function above,
-    // we can simply substitute the equals sign for the <= sign because there's
-    // a single negative division and then y_init switches sides. Similarly for >=.
-
-    if (steps <= 1) { // degenerate case that must be handled first
+    if (steps <= 0) { // degenerate case that must be handled first
         return null;
     }
 
-    const enumerator = steps * steps - 3 * steps + 2;
-    const enumerator_min = enumerator + area.ymin;
-    const enumerator_max = enumerator + area.ymax;
-    const denominator = 2 * steps - 2;
-
-    // y_init <= enumerator_max/denominator
-    // y_init >= enumerator_min/denominator
+    const enumerator = steps * steps - steps;
+    const enumerator_min = enumerator + 2 * area.ymin;
+    const enumerator_max = enumerator + 2 * area.ymax;
+    const denominator = 2 * steps;
 
     const y_init_max = @divFloor(enumerator_max, denominator); // flooring division is intentional
 
@@ -70,17 +57,46 @@ fn getPositiveY(steps: i64, area: Area) ?i64 {
         return null;
     }
 
-    return @divExact(y_init_max * (y_init_max - 1), 2); // y_init_max + (y_init_max - 1) + ... + 1 + 0
+    if (y_init_max > 0) {
+        return @divExact(y_init_max * (y_init_max + 1), 2); // y_init_max + (y_init_max - 1) + ... + 1 + 0
+    } else {
+        return 0;
+    }
 }
 
-fn getNegativeY(steps: i64, area: Area) ?i64 {
-    _ = steps;
-    _ = area;
-    return null;
+fn calculateAllVelocities(
+    stepnums: HashMap(Point, void),
+    area: Area,
+    velmap: *HashMap(Point, void),
+) !void {
+    var keys = stepnums.keyIterator();
+    while (keys.next()) |pt| {
+        const vx = pt.x;
+        const steps = pt.y;
+
+        try addVYs(vx, steps, velmap, area);
+    }
 }
 
-fn getStepNums(alloc: Allocator, area: Area) !HashMap(i64, void) {
-    var stepmap = HashMap(i64, void).init(alloc);
+fn addVYs(vx: i64, steps: i64, velmap: *HashMap(Point, void), area: Area) !void {
+    if (steps <= 0) { // degenerate case that must be handled first
+        return;
+    }
+
+    const enumerator = steps * steps - steps;
+    const enumerator_min = enumerator + 2 * area.ymin;
+    const enumerator_max = enumerator + 2 * area.ymax;
+    const denominator = 2 * steps;
+
+    var y_init = @divFloor(enumerator_max, denominator);
+
+    while (y_init * denominator >= enumerator_min) : (y_init -= 1) {
+        try velmap.put(Point{ .x = vx, .y = y_init }, {});
+    }
+}
+
+fn getStepNums(alloc: Allocator, area: Area) !HashMap(Point, void) {
+    var stepmap = HashMap(Point, void).init(alloc);
 
     var vx: i64 = 0;
     while (vx <= area.xmax) : (vx += 1) {
@@ -90,19 +106,21 @@ fn getStepNums(alloc: Allocator, area: Area) !HashMap(i64, void) {
     return stepmap;
 }
 
-fn getStepsFromVx(vx_: i64, area: Area, stepmap: *HashMap(i64, void)) !void {
+fn getStepsFromVx(vx_: i64, area: Area, stepmap: *HashMap(Point, void)) !void {
     var vx = vx_;
     if (vx < 0) unreachable;
     var t: i64 = 0;
     var xpos: i64 = 0;
 
-    while (xpos < area.xmax and vx > 0) {
+    while (xpos < area.xmax and t < 1000) { // arbitrary limit for t :(
         xpos += vx;
-        vx -= 1;
+        if (vx > 0) {
+            vx -= 1;
+        }
         t += 1;
 
         if (area.xmin <= xpos and area.xmax >= xpos) {
-            try stepmap.put(t, {});
+            try stepmap.put(Point{ .x = vx_, .y = t }, {});
         }
     }
 }
