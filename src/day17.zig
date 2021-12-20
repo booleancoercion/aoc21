@@ -42,6 +42,19 @@ fn getMaxYPossible(stepnums: HashMap(Point, void), area: Area) i64 {
 }
 
 fn getPositiveY(steps: i64, area: Area) ?i64 {
+    // trying to solve:
+    // y_init + (y_init - 1) + ... + 1 + 0 - 1 - ... - (steps - y_init - 1) = t
+    //
+    // this reduces to:
+    // (steps^2 - steps)/2 + t = steps*y_init
+    // which is solved by:
+    // y_init = (steps^2 - steps + 2t)/2steps
+    // (there's a prettier form but it's harder to verify that there's an integer solution for it)
+    //
+    // to solve an inequality f(y_init, steps) <= t where f is the function above,
+    // we can simply substitute the equals sign for the <= sign because y_init switches
+    // sides and there's a single negative division. Similarly for >=.
+
     if (steps <= 0) { // degenerate case that must be handled first
         return null;
     }
