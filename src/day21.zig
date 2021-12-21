@@ -6,7 +6,6 @@ const HashMap = std.AutoHashMap;
 const input = @embedFile("../inputs/day21.txt");
 
 pub fn run(alloc: Allocator, stdout_: anytype) !void {
-    _ = alloc;
     const nums = try parseInput(input);
 
     const res1 = part1(nums);
