@@ -1,5 +1,7 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
+const ArrayList = std.ArrayList;
+const HashMap = std.AutoHashMap;
 
 pub fn Grid(comptime T: type) type {
     return struct {
@@ -157,6 +159,152 @@ pub fn BinaryHeap(comptime T: type) type {
 
             self.heap[i] = nodej;
             self.heap[j] = nodei;
+        }
+
+        fn left(idx: usize) usize {
+            return 2 * idx + 1;
+        }
+
+        fn right(idx: usize) usize {
+            return 2 * idx + 2;
+        }
+
+        fn parent(idx: usize) usize {
+            return (idx - 1) / 2;
+        }
+    };
+}
+
+/// Data must be unique!
+pub fn BinaryHashHeap(comptime T: type) type {
+    return struct {
+        heap: ArrayList(Node),
+        idxmap: HashMap(T, usize),
+
+        const Self = @This();
+
+        pub fn init(alloc: Allocator) Self {
+            return .{
+                .heap = ArrayList(Node).init(alloc),
+                .idxmap = HashMap(T, usize).init(alloc),
+            };
+        }
+
+        pub fn add(self: *Self, item: T, priority: i32) !void {
+            const idx = self.heap.items.len;
+            try self.heap.append(.{
+                .data = item,
+                .priority = priority,
+            });
+            try self.idxmap.put(item, idx);
+
+            self.bubbleUp(idx);
+        }
+
+        pub fn getPriority(self: *Self, item: T) ?i32 {
+            const idx = self.idxmap.get(item) orelse return null;
+            return self.heap.items[idx].priority;
+        }
+
+        pub fn changePriority(self: *Self, item: T, new_priority: i32) void {
+            const heap = self.heap.items;
+            const idx = self.idxmap.get(item).?;
+            heap[idx].priority = new_priority;
+            const prt = parent(idx);
+            if (heap[idx].priority < heap[prt].priority) {
+                self.bubbleUp(idx);
+            } else {
+                self.bubbleDown(idx);
+            }
+        }
+
+        pub fn pop(self: *Self) Node {
+            const heap = self.heap.items;
+            if (heap.len == 0) unreachable;
+
+            var node = heap[0];
+            self.swap(0, heap.len - 1);
+            _ = self.idxmap.remove(node.data);
+            self.heap.shrinkRetainingCapacity(heap.len - 1);
+            self.bubbleDown(0);
+
+            return node;
+        }
+
+        pub fn deinit(self: *Self) void {
+            self.heap.deinit();
+            self.idxmap.deinit();
+        }
+
+        pub const Node = struct {
+            data: T,
+            priority: i32,
+        };
+
+        fn heapify(self: *Self) void {
+            const len = self.heap.items.len;
+
+            var i: usize = 0;
+            while (i < len) : (i += 1) {
+                const idx = len - i - 1;
+
+                self.bubbleDown(idx);
+            }
+        }
+
+        fn bubbleUp(self: *Self, idx_: usize) void {
+            var idx = idx_;
+            const heap = self.heap.items;
+
+            while (idx != 0) {
+                const prt = parent(idx);
+
+                if (heap[prt].priority > heap[idx].priority) {
+                    self.swap(idx, prt);
+                    idx = prt;
+                } else break;
+            }
+        }
+
+        fn bubbleDown(self: *Self, idx_: usize) void {
+            var idx = idx_;
+            const heap = self.heap.items;
+            const len = heap.len;
+            while (idx < len) {
+                const lft = left(idx);
+                const rgt = right(idx);
+
+                if (lft >= len) break;
+                const p = heap[idx].priority;
+                const pl = heap[lft].priority;
+                if (rgt >= len) {
+                    if (pl <= p) {
+                        self.swap(lft, idx);
+                        idx = lft;
+                    } else break;
+                } else {
+                    const pr = heap[rgt].priority;
+
+                    if (pl <= pr and pl <= p) {
+                        self.swap(lft, idx);
+                        idx = lft;
+                    } else if (pr <= pl and pr <= p) {
+                        self.swap(rgt, idx);
+                        idx = rgt;
+                    } else break;
+                }
+            }
+        }
+
+        fn swap(self: *Self, i: usize, j: usize) void {
+            const nodei = self.heap.items[i];
+            const nodej = self.heap.items[j];
+
+            self.idxmap.putAssumeCapacity(nodei.data, j);
+            self.idxmap.putAssumeCapacity(nodej.data, i);
+
+            self.heap.items[i] = nodej;
+            self.heap.items[j] = nodei;
         }
 
         fn left(idx: usize) usize {
