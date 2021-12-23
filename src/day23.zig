@@ -130,6 +130,7 @@ fn State(comptime roomsize: comptime_int) type {
             outer: Self,
             iter_state: IteratorState = .hallway,
             idx: usize = 0,
+            had_room_insertion: bool = false,
 
             const IteratorState = union(enum) { hallway, room: u2, done };
             const StateCost = struct { state: Self, cost: i32 };
@@ -162,6 +163,7 @@ fn State(comptime roomsize: comptime_int) type {
                 new_state.hallway[self.idx] = null;
                 new_state.rooms[@intCast(usize, roomnum)][vacant] = amphi;
 
+                self.had_room_insertion = true;
                 self.advanceState();
 
                 return StateCost{
@@ -173,7 +175,7 @@ fn State(comptime roomsize: comptime_int) type {
             fn nextRoom(self: *@This(), roomnum: u2) ?StateCost {
                 const hallway = self.outer.hallway;
                 if (self.idx >= hallway.len or hallway[self.idx] != null) return null;
-                if (self.isSolved(roomnum)) return null;
+                if (self.isPartiallySolved(roomnum)) return null;
 
                 const outermost = self.getOutermostIdx(roomnum) orelse return null;
                 const roomusize = @intCast(usize, roomnum);
@@ -246,10 +248,10 @@ fn State(comptime roomsize: comptime_int) type {
                 return std.math.absInt(x1 - x2) catch unreachable;
             }
 
-            fn isSolved(self: @This(), roomnum: u2) bool {
+            fn isPartiallySolved(self: @This(), roomnum: u2) bool {
                 const room = self.outer.rooms[@intCast(usize, roomnum)];
                 for (room) |amphin| {
-                    const amphi = amphin orelse return false;
+                    const amphi = amphin orelse continue;
                     if (amphi.roomnum() != roomnum) return false;
                 }
 
@@ -272,8 +274,12 @@ fn State(comptime roomsize: comptime_int) type {
                 }
 
                 if (self.idx >= hallway.len) {
-                    self.iter_state = .{ .room = 0 };
-                    self.makeIdxFirstAvailableForRoom();
+                    if (self.had_room_insertion) {
+                        self.iter_state = .done;
+                    } else {
+                        self.iter_state = .{ .room = 0 };
+                        self.makeIdxFirstAvailableForRoom();
+                    }
                 }
             }
 
