@@ -1,3 +1,109 @@
+// The following code is NOT the solution. This program
+// merely tries to minimize the given expression and fails
+// miserably because it's much easier to interpret as a program.
+
+// Here's how I solved it by hand:
+// list1 = [14,13,15,13,-2,10,13,-15,11,-9,-9,-7,-4,-6]
+// list2 = [00,12,14,00,03,15,11, 12,01,12,03,10,14,12]
+// i     =   0  1  2  3  4  5  6   7  8  9 10 11 12 13
+
+// for i in range(14):
+//     x = peek() + list1[i]
+//     if list1[i] < 0:
+//         pop()
+//     if x != n[i]:
+//         push(n[i] + list2[i])
+
+// Each index where list1 is negative matches some other
+// index where it's positive, like a stack.
+// The lists provide dummy numbers that are added to the
+// value contained in the stack, from which we extract
+// the following equations:
+
+// in[3] + 0 - 2 == in[4]
+// in[6] + 11 - 15 == in[7]
+// in[8] + 1 - 9 == in[9]
+// in[5] + 15 - 9 == in[10]
+// in[2] + 14 - 7 == in[11]
+// in[1] + 12 - 4 == in[12]
+// in[0] + 0 - 6 == in[13]
+
+// in[3] - 2 == in[4]
+// in[6] - 4 == in[7]
+// in[8] - 8 == in[9]
+// in[5] + 6 == in[10]
+// in[2] + 7 == in[11]
+// in[1] + 8 == in[12]
+// in[0] - 6 == in[13]
+
+// -- Part 1 --
+
+// in[3] == 9
+// in[4] == 7
+// in[6] == 9
+// in[7] == 5
+// in[8] == 9
+// in[9] == 1
+// in[5] == 3
+// in[10] == 9
+// in[2] == 2
+// in[11] == 9
+// in[1] == 1
+// in[12] == 9
+// in[0] == 9
+// in[13] == 3
+
+// in[0] == 9
+// in[1] == 1
+// in[2] == 2
+// in[3] == 9
+// in[4] == 7
+// in[5] == 3
+// in[6] == 9
+// in[7] == 5
+// in[8] == 9
+// in[9] == 1
+// in[10] == 9
+// in[11] == 9
+// in[12] == 9
+// in[13] == 3
+
+// 91297395919993
+
+// -- Part 2 --
+
+// in[3] = 3
+// in[4] = 1
+// in[6] = 5
+// in[7] = 1
+// in[8] = 9
+// in[9] = 1
+// in[5] = 1
+// in[10] = 7
+// in[2] = 1
+// in[11] = 8
+// in[1] = 1
+// in[12] = 9
+// in[0] = 7
+// in[13] = 1
+
+// in[0] = 7
+// in[1] = 1
+// in[2] = 1
+// in[3] = 3
+// in[4] = 1
+// in[5] = 1
+// in[6] = 5
+// in[7] = 1
+// in[8] = 9
+// in[9] = 1
+// in[10] = 7
+// in[11] = 8
+// in[12] = 9
+// in[13] = 1
+
+// 71131151917891
+
 const std = @import("std");
 const helper = @import("helper.zig");
 const Allocator = std.mem.Allocator;
@@ -256,16 +362,6 @@ const ConstEval = struct {
             .mod => |regpair| self.evalOp(regpair, mod),
             .eql => |regpair| self.evalOp(regpair, eql),
         }
-
-        // const stdout = std.io.getStdOut().writer();
-        // self.get(.w).print(stdout) catch unreachable;
-        // std.debug.print("\n\n", .{});
-        // self.get(.x).print(stdout) catch unreachable;
-        // std.debug.print("\n\n", .{});
-        // self.get(.y).print(stdout) catch unreachable;
-        // std.debug.print("\n\n", .{});
-        // self.get(.z).print(stdout) catch unreachable;
-        // std.debug.print("\n\n\n", .{});
     }
 
     fn aexpr(self: *Self, expr: Expr) *Expr {
