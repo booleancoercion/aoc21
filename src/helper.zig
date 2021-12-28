@@ -334,6 +334,10 @@ pub fn getlines(buffer: []const u8) std.mem.TokenIterator(u8) {
     return std.mem.tokenize(u8, buffer, "\r\n");
 }
 
+pub fn abs(x: anytype) @TypeOf(x) {
+    return std.math.absInt(x) catch unreachable;
+}
+
 test "BinaryHeap: add and remove min heap" {
     const expectEqual = std.testing.expectEqual;
 
