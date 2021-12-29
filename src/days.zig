@@ -23,4 +23,5 @@ pub const Days = struct {
     pub const day22 = @import("day22.zig");
     pub const day23 = @import("day23.zig");
     pub const day24 = @import("day24.zig");
+    pub const day25 = @import("day25.zig");
 };
